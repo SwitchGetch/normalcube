@@ -6,6 +6,7 @@
 #include <thread>
 #include <chrono>
 #include <string>
+#include <vector>
 using namespace std;
 using namespace chrono;
 
@@ -274,57 +275,102 @@ int randomValue(int lower, int upper)
 	return lower + rand() % (upper - lower + 1);
 }
 
-void output(Object& player)
+//void output(Object& player, int& trail_length)
+//{
+//	while (true)
+//	{
+//		system("cls");
+//
+//		cout << "size:" << endl;
+//		cout << "x: " << player.getSizeX() << endl;
+//		cout << "y: " << player.getSizeY() << endl;
+//
+//		cout << endl;
+//
+//		cout << "color:" << endl;
+//		cout << "red: " << player.getColorRed() << endl;
+//		cout << "green: " << player.getColorGreen() << endl;
+//		cout << "blue: " << player.getColorBlue() << endl;
+//
+//		cout << endl;
+//
+//		cout << "position:" << endl;
+//		cout << "x: " << player.getPositionX() << endl;
+//		cout << "y: " << player.getPositionY() << endl;
+//
+//		cout << endl;
+//
+//		cout << "speed:" << endl;
+//		cout << "x: " << player.getSpeedX() << endl;
+//		cout << "y: " << player.getSpeedY() << endl;
+//
+//		cout << endl;
+//
+//		cout << "acceleration:" << endl;
+//		cout << "x: " << player.getAccelerationX() << endl;
+//		cout << "y: " << player.getAccelerationY() << endl;
+//
+//		cout << endl;
+//
+//		cout << "trail_length: " << trail_length << endl;
+//
+//		this_thread::sleep_for(milliseconds(1));
+//	}
+//}
+
+
+class Switch
 {
-	while (true)
+	bool value;
+
+public:
+
+	Switch() = default;
+
+	Switch(bool value) : value(value) {}
+
+	void set(bool value)
 	{
-		system("cls");
-
-		cout << "size:" << endl;
-		cout << "x: " << player.getSizeX() << endl;
-		cout << "y: " << player.getSizeY() << endl;
-
-		cout << endl;
-
-		cout << "color:" << endl;
-		cout << "red: " << player.getColorRed() << endl;
-		cout << "green: " << player.getColorGreen() << endl;
-		cout << "blue: " << player.getColorBlue() << endl;
-
-		cout << endl;
-
-		cout << "position:" << endl;
-		cout << "x: " << player.getPositionX() << endl;
-		cout << "y: " << player.getPositionY() << endl;
-
-		cout << endl;
-
-		cout << "speed:" << endl;
-		cout << "x: " << player.getSpeedX() << endl;
-		cout << "y: " << player.getSpeedY() << endl;
-
-		cout << endl;
-
-		cout << "acceleration:" << endl;
-		cout << "x: " << player.getAccelerationX() << endl;
-		cout << "y: " << player.getAccelerationY() << endl;
-
-		cout << endl;
-
-		this_thread::sleep_for(milliseconds(1));
+		this->value = value;
 	}
-}
+
+	bool get()
+	{
+		return value;
+	}
+
+	void change()
+	{
+		value = (value ? false : true);
+	}
+};
 
 
 int main()
 {
 	srand(time(NULL));
 
+	vector<sf::RectangleShape> trail;
+	sf::RectangleShape trail_element;
+	double trail_length = 0;
+
 	high_resolution_clock::time_point start;
 	high_resolution_clock::time_point end;
 
+	Switch stats(false);
+	sf::Font font;
+	sf::Text text;
 
-	double winX = 1000, winY = 500;
+	if (!font.loadFromFile("arial.ttf"))
+	{
+		return 0;
+	}
+
+	text.setFont(font);
+	text.setCharacterSize(20);
+	text.setFillColor(sf::Color(0, 0, 0));
+
+	double winX = 1000, winY = 750;
 
 	sf::Vector2f player_size = sf::Vector2f(100, 100);
 	sf::Color player_color = sf::Color(255, 0, 0);
@@ -343,6 +389,10 @@ int main()
 	sf::Vector2f space_position = sf::Vector2f(winX, randomValue(0, winY - space_size.y));
 	sf::Vector2f space_speed = sf::Vector2f(0, 0);
 	sf::Vector2f space_acceleration = sf::Vector2f(0, 0);
+
+	trail_element.setSize(player_size);
+	trail_element.setPosition(player_position);
+	trail_element.setFillColor(sf::Color(127, 0, 0));
 
 
 	sf::RenderWindow window(sf::VideoMode(winX, winY), "flappy cube");
@@ -371,7 +421,7 @@ int main()
 	space.setAcceleration(space_acceleration);
 
 
-	thread(output, ref(player)).detach();
+	//thread(output, ref(player), ref(trail_length)).detach();
 
 
 	while (window.isOpen())
@@ -414,6 +464,24 @@ int main()
 
 					break;
 
+				case sf::Keyboard::Scan::Z:
+
+					if (trail_length) trail_length--;
+
+					break;
+
+				case sf::Keyboard::Scan::X:
+
+					trail_length++;
+
+					break;
+
+				case sf::Keyboard::D:
+
+					stats.change();
+
+					break;
+
 				default:
 
 					break;
@@ -428,14 +496,74 @@ int main()
 
 		window.draw(tube.getShape());
 		window.draw(space.getShape());
+
+		for (int i = trail.size() - 2, j = 0; i >= 0 && j < trail_length; i--, j++)
+		{
+			window.draw(trail[i]);
+		}
+
+		if (trail.size() > trail_length)
+		{
+			for (int i = 0; i < trail.size() - trail_length; i++)
+			{
+				trail.erase(trail.begin());
+			}
+		}
+
 		window.draw(player.getShape());
+
+		if (stats.get())
+		{
+			string stats_text =
+				" size:\n"
+				" x: " + to_string(player.getSizeX()).substr(0, to_string(player.getSizeX()).find_last_not_of('0')) + "\n" +
+				" y: " + to_string(player.getSizeY()).substr(0, to_string(player.getSizeY()).find_last_not_of('0')) + "\n" +
+
+				" \n" +
+
+				" color:\n" +
+				" red: " + to_string(player.getColorRed()).substr(0, to_string(player.getColorRed()).find_last_not_of('0')) + "\n" +
+				" green: " + to_string(player.getColorGreen()).substr(0, to_string(player.getColorGreen()).find_last_not_of('0')) + "\n" +
+				" blue: " + to_string(player.getColorBlue()).substr(0, to_string(player.getColorBlue()).find_last_not_of('0')) + "\n" +
+
+				" \n" +
+
+				" position:\n" +
+				" x: " + to_string(player.getPositionX()).substr(0, to_string(player.getPositionX()).find_last_not_of('0')) + "\n" +
+				" y: " + to_string(player.getPositionY()).substr(0, to_string(player.getPositionY()).find_last_not_of('0')) + "\n" +
+
+				" \n" +
+
+				" speed:\n" +
+				" x: " + to_string(player.getSpeedX()).substr(0, to_string(player.getSpeedX()).find_last_not_of('0')) + "\n" +
+				" y: " + to_string(player.getSpeedY()).substr(0, to_string(player.getSpeedY()).find_last_not_of('0')) + "\n" +
+
+				" \n" +
+
+				" acceleration:\n" +
+				" x: " + to_string(player.getAccelerationX()).substr(0, to_string(player.getAccelerationX()).find_last_not_of('0') + 1) + "\n" +
+				" y: " + to_string(player.getAccelerationY()).substr(0, to_string(player.getAccelerationY()).find_last_not_of('0') + 1) + "\n" +
+
+				" \n" +
+
+				" trail length: " + to_string(trail_length).substr(0, to_string(trail_length).find_last_not_of('0'));
+
+
+			text.setString(stats_text.c_str());
+
+			text.setPosition(player.getPositionX() - player_position.x, 0);
+
+			window.draw(text);
+		}
 
 		window.display();
 
 
+		view.move(player.getSpeedX(), 0);
+
+
 		player.move();
 
-		view.move(player.getSpeedX(), 0);
 
 		if (player.getPositionX() - tube.getPositionX() >= player_position.x + tube.getSizeX())
 		{
@@ -445,11 +573,19 @@ int main()
 			space.setPositionY(randomValue(0, winY - space.getSizeY()));
 		}
 
+
+		trail_element.setPosition(player.getPosition());
+		trail.push_back(trail_element);
+
+
+
 		this_thread::sleep_for(milliseconds(1));
+
+
 
 		end = high_resolution_clock::now();
 
-		double fps = 1000000000.0f / duration_cast<std::chrono::nanoseconds>(end - start).count();
+		double fps = 1000000000.0f / duration_cast<nanoseconds>(end - start).count();
 
 		string title = "flappy cube FPS[" + to_string(fps) + "]";
 		window.setTitle(title.c_str());
