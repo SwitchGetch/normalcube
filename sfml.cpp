@@ -5,83 +5,150 @@
 #include <cmath>
 #include <thread>
 #include <chrono>
+#include <string>
 using namespace std;
 using namespace chrono;
 
-class Player
+class Object
 {
+	sf::RectangleShape object;
+	sf::Vector2f size = sf::Vector2f(0, 0);
+	sf::Color color = sf::Color::White;
+
+	sf::Vector2f position = sf::Vector2f(0, 0);
 	sf::Vector2f speed = sf::Vector2f(0, 0);
 	sf::Vector2f acceleration = sf::Vector2f(0, 0);
 
-	double cordX = 0;
-	double cordY = 0;
-
-	double length(sf::Vector2f vec)
-	{
-		return sqrt(pow(vec.x, 2) + pow(vec.y, 2));
-	}
-
-	void normalize(sf::Vector2f& vec)
-	{
-		if (length(vec) != 1)
-		{
-			double l = length(vec);
-
-			vec.x /= l;
-			vec.y /= l;
-		}
-	}
-
 public:
 
-	void setPosition(double x, double y)
+	void setSize(double sizeX, double sizeY)
 	{
-		cordX = x;
-		cordY = y;
+		size = sf::Vector2f(sizeX, sizeY);
+
+		object.setSize(size);
 	}
 
-	void setSpeed(double x, double y)
+	void setSize(sf::Vector2f s)
 	{
-		speed.x = x;
-		speed.y = y;
+		size = s;
+
+		object.setSize(size);
 	}
 
-	void setAcceleration(double x, double y)
+	void setSizeX(double sizeX)
 	{
-		acceleration.x = x;
-		acceleration.y = y;
+		size.x = sizeX;
+
+		object.setSize(size);
 	}
 
-	void setSpeedX(double x)
+	void setSizeY(double sizeY)
 	{
-		speed.x = x;
+		size.y = sizeY;
+
+		object.setSize(size);
 	}
 
-	void setSpeedY(double y)
+	void setColor(double red, double green, double blue)
 	{
-		speed.y = y;
+		color = sf::Color(red, green, blue);
+
+		object.setFillColor(color);
 	}
 
-	void setAccelerationX(double x)
+	void setColor(sf::Color c)
 	{
-		acceleration.x = x;
+		color = c;
+
+		object.setFillColor(color);
 	}
 
-	void setAccelerationY(double y)
+	void setPosition(double positionX, double positionY)
 	{
-		acceleration.y = y;
+		position = sf::Vector2f(positionX, positionY);
+
+		object.setPosition(position);
+	}
+
+	void setPosition(sf::Vector2f p)
+	{
+		position = p;
+
+		object.setPosition(position);
+	}
+
+	void setPositionX(double positionX)
+	{
+		position.x = positionX;
+
+		object.setPosition(position);
+	}
+
+	void setPositionY(double positionY)
+	{
+		position.y = positionY;
+
+		object.setPosition(position);
+	}
+
+	void setSpeed(double speedX, double speedY)
+	{
+		speed = sf::Vector2f(speedX, speedY);
+	}
+
+	void setSpeed(sf::Vector2f s)
+	{
+		speed = s;
+	}
+
+	void setAcceleration(double accelerationX, double accelerationY)
+	{
+		acceleration = sf::Vector2f(accelerationX, accelerationY);
+	}
+
+	void setAcceleration(sf::Vector2f a)
+	{
+		acceleration = a;
+	}
+
+	void setSpeedX(double speedX)
+	{
+		speed.x = speedX;
+	}
+
+	void setSpeedY(double speedY)
+	{
+		speed.y = speedY;
+	}
+
+	void setAccelerationX(double accelerationX)
+	{
+		acceleration.x = accelerationX;
+	}
+
+	void setAccelerationY(double accelerationY)
+	{
+		acceleration.y = accelerationY;
 	}
 
 	void increaseSpeed(double bonusX, double bonusY)
 	{
-		speed.x += bonusX;
-		speed.y += bonusY;
+		speed += sf::Vector2f(bonusX, bonusY);
+	}
+
+	void increaseSpeed(sf::Vector2f bonus)
+	{
+		speed += bonus;
 	}
 
 	void increaseAcceleration(double bonusX, double bonusY)
 	{
-		acceleration.x += bonusX;
-		acceleration.y += bonusY;
+		acceleration += sf::Vector2f(bonusX, bonusY);
+	}
+
+	void increaseAcceleration(sf::Vector2f bonus)
+	{
+		acceleration += bonus;
 	}
 
 	void increaseSpeedX(double bonusX)
@@ -105,19 +172,59 @@ public:
 	}
 
 
+	sf::RectangleShape getShape()
+	{
+		return object;
+	}
+
+	sf::Color getColor()
+	{
+		return color;
+	}
+
+	double getColorRed()
+	{
+		return color.r;
+	}
+
+	double getColorGreen()
+	{
+		return color.g;
+	}
+
+	double getColorBlue()
+	{
+		return color.b;
+	}
+
+	sf::Vector2f getSize()
+	{
+		return size;
+	}
+
+	double getSizeX()
+	{
+		return size.x;
+	}
+
+	double getSizeY()
+	{
+		return size.y;
+	}
+
 	sf::Vector2f getPosition()
 	{
-		return sf::Vector2f(cordX, cordY);
+		return position;
 	}
 
 	double getPositionX()
 	{
-		return cordX;
+		return position.x;
 	}
 
 	double getPositionY()
 	{
-		return cordY;
+		return position.y;
 	}
 
 	sf::Vector2f getSpeed()
@@ -153,68 +260,115 @@ public:
 
 	void move()
 	{
-		cordX += speed.x;
-		cordY += speed.y;
+		position += speed;
 
-		speed.x += acceleration.x;
-		speed.y += acceleration.y;
+		speed += acceleration;
+
+		object.setPosition(position);
 	}
+};
 
 
-	void statsOutput()
+int randomValue(int lower, int upper)
+{
+	return lower + rand() % (upper - lower + 1);
+}
+
+void output(Object& player)
+{
+	while (true)
 	{
 		system("cls");
 
+		cout << "size:" << endl;
+		cout << "x: " << player.getSizeX() << endl;
+		cout << "y: " << player.getSizeY() << endl;
+
+		cout << endl;
+
+		cout << "color:" << endl;
+		cout << "red: " << player.getColorRed() << endl;
+		cout << "green: " << player.getColorGreen() << endl;
+		cout << "blue: " << player.getColorBlue() << endl;
+
+		cout << endl;
+
 		cout << "position:" << endl;
-		cout << "x: " << cordX << endl;
-		cout << "y: " << cordY << endl;
+		cout << "x: " << player.getPositionX() << endl;
+		cout << "y: " << player.getPositionY() << endl;
 
 		cout << endl;
 
 		cout << "speed:" << endl;
-		cout << "x: " << speed.x << endl;
-		cout << "y: " << speed.y << endl;
-		cout << "speed module: " << length(speed) << endl;
+		cout << "x: " << player.getSpeedX() << endl;
+		cout << "y: " << player.getSpeedY() << endl;
 
 		cout << endl;
 
 		cout << "acceleration:" << endl;
-		cout << "x: " << acceleration.x << endl;
-		cout << "y: " << acceleration.y << endl;
-		cout << "acceleration module: " << length(acceleration) << endl;
+		cout << "x: " << player.getAccelerationX() << endl;
+		cout << "y: " << player.getAccelerationY() << endl;
 
 		cout << endl;
-	}
-};
-
-void output(Player& player)
-{
-	while (true)
-	{
-		player.statsOutput();
 
 		this_thread::sleep_for(milliseconds(1));
 	}
 }
 
+
 int main()
 {
-	sf::RenderWindow window(sf::VideoMode(500, 500), "window");
-	//sf::View view(sf::Vector2f(250, 250), sf::Vector2f(500, 500));
+	srand(time(NULL));
+
+	high_resolution_clock::time_point start;
+	high_resolution_clock::time_point end;
 
 
-	sf::RectangleShape rectangle;
+	double winX = 1000, winY = 500;
 
-	rectangle.setSize(sf::Vector2f(100, 100));
-	rectangle.setFillColor(sf::Color(127, 127, 127));
+	sf::Vector2f player_size = sf::Vector2f(100, 100);
+	sf::Color player_color = sf::Color(255, 0, 0);
+	sf::Vector2f player_position = sf::Vector2f(200, 200);
+	sf::Vector2f player_speed = sf::Vector2f(0, 0);
+	sf::Vector2f player_acceleration = sf::Vector2f(0, 1);
+
+	sf::Vector2f tube_size = sf::Vector2f(100, winY);
+	sf::Color tube_color = sf::Color(0, 255, 0);
+	sf::Vector2f tube_position = sf::Vector2f(winX, 0);
+	sf::Vector2f tube_speed = sf::Vector2f(0, 0);
+	sf::Vector2f tube_acceleration = sf::Vector2f(0, 0);
+
+	sf::Vector2f space_size = sf::Vector2f(100, 0.5 * winY);
+	sf::Color space_color = sf::Color(52, 207, 235);
+	sf::Vector2f space_position = sf::Vector2f(winX, randomValue(0, winY - space_size.y));
+	sf::Vector2f space_speed = sf::Vector2f(0, 0);
+	sf::Vector2f space_acceleration = sf::Vector2f(0, 0);
 
 
-	Player player;
+	sf::RenderWindow window(sf::VideoMode(winX, winY), "flappy cube");
+	sf::View view(sf::Vector2f(winX / 2, winY / 2), sf::Vector2f(winX, winY));
 
-	player.setPosition(200, 200);
 
-	player.setSpeed(0, -20);
-	player.setAcceleration(0, 1);
+	Object player;
+	player.setSize(player_size);
+	player.setColor(player_color);
+	player.setPosition(player_position);
+	player.setSpeed(player_speed);
+	player.setAcceleration(player_acceleration);
+
+	Object tube;
+	tube.setSize(tube_size);
+	tube.setColor(tube_color);
+	tube.setPosition(tube_position);
+	tube.setSpeed(tube_speed);
+	tube.setAcceleration(tube_acceleration);
+
+	Object space;
+	space.setSize(space_size);
+	space.setColor(space_color);
+	space.setPosition(space_position);
+	space.setSpeed(space_speed);
+	space.setAcceleration(space_acceleration);
 
 
 	thread(output, ref(player)).detach();
@@ -222,6 +376,8 @@ int main()
 
 	while (window.isOpen())
 	{
+		start = high_resolution_clock::now();
+
 		sf::Event event;
 		while (window.pollEvent(event))
 		{
@@ -236,7 +392,7 @@ int main()
 				{
 				case sf::Keyboard::Scan::Up:
 
-					player.setSpeedY(-20);
+					player.setSpeedY(-15);
 
 					break;
 
@@ -248,13 +404,13 @@ int main()
 
 				case sf::Keyboard::Scan::Left:
 
-					player.setSpeedX(-5);
+					player.setSpeedX(-10);
 
 					break;
 
 				case sf::Keyboard::Scan::Right:
 
-					player.setSpeedX(5);
+					player.setSpeedX(10);
 
 					break;
 
@@ -265,18 +421,37 @@ int main()
 			}
 		}
 
-		//window.setView(view);
+		window.setView(view);
 
-		window.clear();
-		window.draw(rectangle);
+
+		window.clear(sf::Color(52, 207, 235));
+
+		window.draw(tube.getShape());
+		window.draw(space.getShape());
+		window.draw(player.getShape());
+
 		window.display();
+
 
 		player.move();
 
-		rectangle.setPosition(player.getPosition());
+		view.move(player.getSpeedX(), 0);
 
-		//view.move(player.getSpeedX(), 0);
+		if (player.getPositionX() - tube.getPositionX() >= player_position.x + tube.getSizeX())
+		{
+			tube.setPositionX(player.getPositionX() + winX - player_position.x);
+
+			space.setPositionX(tube.getPositionX());
+			space.setPositionY(randomValue(0, winY - space.getSizeY()));
+		}
 
 		this_thread::sleep_for(milliseconds(1));
+
+		end = high_resolution_clock::now();
+
+		double fps = 1000000000.0f / duration_cast<std::chrono::nanoseconds>(end - start).count();
+
+		string title = "flappy cube FPS[" + to_string(fps) + "]";
+		window.setTitle(title.c_str());
 	}
 }
